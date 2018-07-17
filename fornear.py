@@ -1,6 +1,7 @@
 import requests
 import json
 import sys
+import xlsxwriter
 
 #print(sys.argv)
 reload(sys)
@@ -9,6 +10,25 @@ sys.setdefaultencoding('utf8')
 begin = int(sys.argv[1])
 end = int(sys.argv[2])
 print 'Start to crawl page from ', begin, 'to', end
+
+filename = 'page'+ sys.argv[1] + 'to' + sys.argv[2] + '.xlsx'
+workbook = xlsxwriter.Workbook(filename)
+worksheet = workbook.add_worksheet()
+
+worksheet.write('A1', 'productName')
+worksheet.write('B1', 'companyName')
+worksheet.write('C1', 'companyAddress')
+worksheet.write('D1', 'pfLists')
+
+#worksheet.write(1, 1, '1 1')
+#worksheet.write(1, 2, '1 2')
+#worksheet.write(1, 3, '1 3')
+
+global row
+row = 0
+global col
+col = 0
+global gstr
 
 for page in range(begin, end+1):
   s = str(page)
@@ -51,12 +71,19 @@ for page in range(begin, end+1):
   #print obj["list"][0]
 
   count = 0
+
   for item in obj["list"]:
     #print item
     count = count + 1
     print 'Page: ', page, '-', count
     print item['productName'],
     print item['enterpriseName'], #item['processid']
+
+    col = 0
+    row = row + 1
+    worksheet.write(row, col, item['productName'])
+    col = col + 1
+    worksheet.write(row, col, item['enterpriseName'])
     processid = item['processid']
     #nextUrl = "http://125.35.6.80:8080/ftba/itownet/hzp_ba/fw/pz.jsp?processid="+processid+"&nid="+processid
     #print nextUrl
@@ -87,9 +114,23 @@ for page in range(begin, end+1):
     obj2 = json.loads(response.content)
     print obj2["scqyUnitinfo"]["enterprise_name"], '-',  obj2["scqyUnitinfo"]["enterprise_address"]
     
+    #col = col + 1
+    #worksheet.write(row, col, obj2["scqyUnitinfo"]["enterprise_name"])
+    col = col + 1
+    worksheet.write(row, col, obj2["scqyUnitinfo"]["enterprise_address"])
+
+    gstr = ''
     print '{',
     for pfItem in obj2["pfList"]:
       print pfItem["cname"],
+      gstr = gstr + ' ' + pfItem["cname"]
     print '}'
 
+    col = col + 1
+    worksheet.write(row, col, gstr)
+
     print ''
+
+
+workbook.close()
+exit
